@@ -1,59 +1,17 @@
-# Vuex
+# 说明
+本仓库用于阅读并记录 `Vuex` 源码
 
-[![npm](https://img.shields.io/npm/v/vuex.svg)](https://npmjs.com/package/vuex)
-[![ci status](https://circleci.com/gh/vuejs/vuex/tree/dev.png?style=shield)](https://circleci.com/gh/vuejs/vuex)
+非常建议一些能力有限并且从未阅读过成熟库源码的前端把 **Vuex源码** 作为自己第一个阅读源码的库，因为它本身代码量只有几百行，实现逻辑也非常易懂，我相信只要用心、肯花费时间，一定能将它的源码读懂的
 
----
+当然，阅读源码的前提是你必须对这个库有一定的使用经验以及了解，否则就算开始阅读源码了，你也很难知道它在做什么  ➡️[Vuex文档链接](https://vuex.vuejs.org/zh/)
 
-:fire: **HEADS UP!** You're currently looking at Vuex 3 branch. If you're looking for Vuex 4, [please check out `4.0` branch](https://github.com/vuejs/vuex/tree/4.0).
+刚开始做好阅读源码的准备，我给自己定下的期限是 `15`天
 
----
+`Vuex`也是我第一次阅读源码的库，本仓库会记录下我阅读源码的全过程以及经验分享，希望可以帮助到大家～
 
-Vuex is a state management pattern + library for Vue.js applications. It serves as a centralized store for all the components in an application, with rules ensuring that the state can only be mutated in a predictable fashion. It also integrates with Vue's official [devtools extension](https://github.com/vuejs/vue-devtools) to provide advanced features such as zero-config time-travel debugging and state snapshot export / import.
+# 进度（1/15）
+【2021年】
 
-Learn more about Vuex at "[What is Vuex?](https://vuex.vuejs.org/)", or get started by looking into [full documentation](http://vuex.vuejs.org/).
+- **1月15日：**熟悉了 `Modules` 的注册流程
 
-## Documentation
-
-To check out docs, visit [vuex.vuejs.org](https://vuex.vuejs.org/).
-
-## Examples
-
-- [Counter](https://github.com/vuejs/vuex/tree/dev/examples/counter)
-- [Counter with Hot Reload](https://github.com/vuejs/vuex/tree/dev/examples/counter-hot)
-- [TodoMVC](https://github.com/vuejs/vuex/tree/dev/examples/todomvc)
-- [Flux Chat](https://github.com/vuejs/vuex/tree/dev/examples/chat)
-- [Shopping Cart](https://github.com/vuejs/vuex/tree/dev/examples/shopping-cart)
-
-Running the examples:
-
-```bash
-$ npm install
-$ npm run dev # serve examples at localhost:8080
-```
-
-## Questions
-
-For questions and support please use the [Discord chat server](https://chat.vuejs.org) or [the official forum](http://forum.vuejs.org). The issue list of this repo is **exclusively** for bug reports and feature requests.
-
-## Issues
-
-Please make sure to read the [Issue Reporting Checklist](https://github.com/vuejs/vuex/blob/dev/.github/contributing.md#issue-reporting-guidelines) before opening an issue. Issues not conforming to the guidelines may be closed immediately.
-
-## Changelog
-
-Detailed changes for each release are documented in the [release notes](https://github.com/vuejs/vuex/releases).
-
-## Stay In Touch
-
-For latest releases and announcements, follow on Twitter: [@vuejs](https://twitter.com/vuejs).
-
-## Contribution
-
-Please make sure to read the [Contributing Guide](https://github.com/vuejs/vuex/blob/dev/.github/contributing.md) before making a pull request.
-
-## License
-
-[MIT](http://opensource.org/licenses/MIT)
-
-Copyright (c) 2015-present Evan You
+# 源码解析
