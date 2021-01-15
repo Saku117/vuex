@@ -6,15 +6,15 @@
  * @param {Function} f
  * @return {*}
  */
+
+ // 找到数组list中第一个符合要求的元素
 export function find (list, f) {
   return list.filter(f)[0]
 }
 
 /**
- * Deep copy the given object considering circular structure.
- * This function caches all nested objects and its copies.
- * If it detects circular structure, use cached copy to avoid infinite loop.
- *
+ * 深拷贝
+ * 
  * @param {*} obj
  * @param {Array<Object>} cache
  * @return {*}
@@ -46,25 +46,27 @@ export function deepCopy (obj, cache = []) {
   return copy
 }
 
-/**
- * forEach for object
- */
+// 遍历obj对象的每个属性的值
 export function forEachValue (obj, fn) {
   Object.keys(obj).forEach(key => fn(obj[key], key))
 }
 
+// 判断是否为对象（排除null）
 export function isObject (obj) {
   return obj !== null && typeof obj === 'object'
 }
 
+// 判断是否为Promise对象
 export function isPromise (val) {
   return val && typeof val.then === 'function'
 }
 
+// 断言
 export function assert (condition, msg) {
   if (!condition) throw new Error(`[vuex] ${msg}`)
 }
 
+// 
 export function partial (fn, arg) {
   return function () {
     return fn(arg)

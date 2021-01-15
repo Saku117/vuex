@@ -7,9 +7,7 @@ let Vue // bind on install
 
 export class Store {
   constructor (options = {}) {
-    // Auto install if it is not done yet and `window` has `Vue`.
-    // To allow users to avoid auto-installation in some cases,
-    // this code should be placed here. See #731
+    // 如果window上有Vue，则自动安装。注：这是用于在html文件中直接以script标签引入的情况
     if (!Vue && typeof window !== 'undefined' && window.Vue) {
       install(window.Vue)
     }
@@ -25,7 +23,7 @@ export class Store {
       strict = false
     } = options
 
-    // store internal state
+    // 存储一些store内部的状态
     this._committing = false
     this._actions = Object.create(null)
     this._actionSubscribers = []
@@ -536,6 +534,7 @@ function unifyObjectStyle (type, payload, options) {
   return { type, payload, options }
 }
 
+// 提供install方法
 export function install (_Vue) {
   if (Vue && _Vue === Vue) {
     if (__DEV__) {
