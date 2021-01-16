@@ -1,6 +1,6 @@
 import { forEachValue } from '../util'
 
-// Vuex中的模块类，包含了state、mutations、getters、actions、modules
+// 定义了Vuex中的 Module 类，包含了state、mutations、getters、actions、modules
 export default class Module {
   constructor (rawModule, runtime) {
     this.runtime = runtime
@@ -14,6 +14,7 @@ export default class Module {
     this.state = (typeof rawState === 'function' ? rawState() : rawState) || {}   
   }
 
+  // 判断该模块是否定义了namespaced，定义了则返回true; 否则返回false
   get namespaced () {
     return !!this._rawModule.namespaced
   }
@@ -51,22 +52,26 @@ export default class Module {
     }
   }
 
+  // 遍历当前模块的所有子模块，并执行回调操作
   forEachChild (fn) {
     forEachValue(this._children, fn)
   }
 
+  // 遍历当前模块的所有getters，并执行回调操作
   forEachGetter (fn) {
     if (this._rawModule.getters) {
       forEachValue(this._rawModule.getters, fn)
     }
   }
 
+  // 遍历当前模块的所有actions，并执行回调操作
   forEachAction (fn) {
     if (this._rawModule.actions) {
       forEachValue(this._rawModule.actions, fn)
     }
   }
 
+  // 遍历当前模块的所有mutations，并执行回调操作
   forEachMutation (fn) {
     if (this._rawModule.mutations) {
       forEachValue(this._rawModule.mutations, fn)

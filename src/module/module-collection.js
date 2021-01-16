@@ -3,7 +3,7 @@ import { assert, forEachValue } from '../util'
 
 export default class ModuleCollection {
   constructor (rawRootModule) {
-    // 注册一个根模块
+    // 递归注册模块
     this.register([], rawRootModule, false)
   }
 
@@ -14,10 +14,11 @@ export default class ModuleCollection {
     }, this.root)
   }
 
+  // 获取模块路径下对应模块的命名空间完整路径，例如：first/second/add
   getNamespace (path) {
     let module = this.root
     return path.reduce((namespace, key) => {
-      module = module.getChild(key)
+      module = module.getChild(key)   // 获取子模块
       return namespace + (module.namespaced ? key + '/' : '')
     }, '')
   }
@@ -51,6 +52,7 @@ export default class ModuleCollection {
     }
   }
 
+  // 根据模块路径，注销对应的模块
   unregister (path) {
     const parent = this.get(path.slice(0, -1))
     const key = path[path.length - 1]
@@ -73,6 +75,7 @@ export default class ModuleCollection {
     parent.removeChild(key)
   }
 
+  // 判断模块是否已被注册
   isRegistered (path) {
     const parent = this.get(path.slice(0, -1))
     const key = path[path.length - 1]
