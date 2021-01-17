@@ -25,9 +25,29 @@ export class Store {
 
     // 存储一些store内部的状态
     this._committing = false        // 表示提交的状态，即在执行mutations方法时，该状态为true
-    this._actions = Object.create(null)         // 用于记录所有存在的actions方法名称（包括全局的和命名空间内的）
+
+    /**
+     * 用于记录所有存在的actions方法名称（包括全局的和命名空间内的）
+     * 
+     * 具体格式入下：
+     * this._actions = {
+     *    actions1: [function handler() {...}],   // 注册全局的actions1方法
+     *    second/actions2: [function handler() {...}],   // 注册在命名空间 second/ 上的actions2方法
+     * }
+     */
+    this._actions = Object.create(null)         
     this._actionSubscribers = []       // 存放actions方法订阅的回调函数
-    this._mutations = Object.create(null)       // 用于记录所有存在的的mutations方法名称（包括全局的和命名空间内的）
+
+    /**
+     * 用于记录所有存在的的mutations方法名称（包括全局的和命名空间内的）
+     * 
+     * 具体格式如下：
+     * this._mutations = {
+     *    mutations1: [function handler() {...}],   // 注册在全局的mutations1
+     *    second/mutations2: [function handler() {...}],  // 注册在命名空间 second/ 上的mutations2
+     * }
+     */
+    this._mutations = Object.create(null)     
     this._wrappedGetters = Object.create(null)  // 收集所有模块的getters
     this._modules = new ModuleCollection(options)  // 根据传入的options配置，注册各个模块，此时只是注册、建立好了各个模块的关系，已经定义了各个模块的state状态，但getters、mutations等方法暂未注册
     
@@ -36,9 +56,8 @@ export class Store {
      * 
      * 具体格式如下：
      * this._modulesNamespaceMap = {
-     *    first: moduleFirst,
-     *    first/second: moduleSecond,
-     *    first/second/third: moduleThird
+     *    second/: moduleSecond,
+     *    second/third: moduleFirst,
      * }
      */
     this._modulesNamespaceMap = Object.create(null)   
@@ -343,9 +362,9 @@ function resetStoreVM (store, state, hot) {
 // 注册完善各个模块内的信息
 function installModule (store, rootState, path, module, hot) {
   const isRoot = !path.length  // 是否为根模块
-  const namespace = store._modules.getNamespace(path)  // 获取当前模块的路径，格式 first/second/third
+  const namespace = store._modules.getNamespace(path)  // 获取当前模块的路径，格式为：second/ 或 second/third/
 
-  // 如果当前模块设置了namespaced，则在modulesNamespaceMap中存储一下当前模块
+  // 如果当前模块设置了namespaced 或 继承了父模块的namespaced，则在modulesNamespaceMap中存储一下当前模块
   if (module.namespaced) {
     if (store._modulesNamespaceMap[namespace] && __DEV__) {
       console.error(`[vuex] duplicate namespace ${namespace} for the namespaced module ${path.join('/')}`)
@@ -375,14 +394,25 @@ function installModule (store, rootState, path, module, hot) {
 
   // 注册模块的所有mutations
   module.forEachMutation((mutation, key) => {
-    const namespacedType = namespace + key
+    const namespacedType = namespace + key     // 例如：first/second/mutations1
     registerMutation(store, namespacedType, mutation, local)
   })
 
   // 注册模块的所有actions
   module.forEachAction((action, key) => {
+    /**
+     * actions有两种写法：
+     * 
+     * actions: {
+     *    AsyncAdd (context, payload) {...},   // 第一种写法
+     *    AsyncDelete: {                       // 第二种写法
+     *      root: true,
+     *      handler: (context, payload) {...}
+     *    } 
+     * }
+     */
     const type = action.root ? key : namespace + key   // 判断是否需要在命名空间里注册一个全局的action
-    const handler = action.handler || action      // actions对应的函数
+    const handler = action.handler || action          // 获取actions对应的函数
     registerAction(store, type, handler, local)   
   })
 
@@ -497,7 +527,7 @@ function registerAction (store, type, handler, local) {
       rootGetters: store.getters,
       rootState: store.state
     }, payload)
-    // 若actions方法返回了promise，则将promise返回
+    // 若返回值不是一个promise对象，则包装一层promise，并将返回值作为then的参数
     if (!isPromise(res)) {
       res = Promise.resolve(res)
     }
@@ -514,12 +544,13 @@ function registerAction (store, type, handler, local) {
 
 // 注册getters
 function registerGetter (store, type, rawGetter, local) {
-  if (store._wrappedGetters[type]) {   // 若注册过了，则不再重复注册
+  if (store._wrappedGetters[type]) {   // 若记录过getters了，则不再重复记录
     if (__DEV__) {
       console.error(`[vuex] duplicate getter key: ${type}`)
     }
     return
   }
+  // 在store._wrappedGetters中记录getters
   store._wrappedGetters[type] = function wrappedGetter (store) {
     return rawGetter(
       local.state, // local state

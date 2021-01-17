@@ -152,7 +152,7 @@ const store = Vuex.Store({
     filter: (state) => (limit) => {
       return state.nums.filter(num => num < limit)
     },
-    single(state, getters) {
+    single(state, getters, rootState, rootGetters) {
       return getters.filter(10) 
     }
   }
@@ -310,7 +310,7 @@ const store = new Vuex.Store({
 })
 ```
 
-`actions` 只接收两个参数，即 `context` 和 `products` ，前者可以访问 `state` 、`commit` 、`dispatch` ，后者就是接收到的一些参数
+`actions` 只接收两个参数，即 `context` 和 `products` ，前者可以访问 `state` 、`commit` 、`dispatch` 、`getters` 、`rootState` 、`rootGetters` ，后者就是接收到的一些参数
 
 ## 使用
 

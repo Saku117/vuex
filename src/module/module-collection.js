@@ -14,7 +14,12 @@ export default class ModuleCollection {
     }, this.root)
   }
 
-  // 获取模块路径下对应模块的命名空间完整路径，例如：first/second/add
+  /**
+   * 根据模块是否有命名空间来设定一个路径名称
+   * 例如：A为父模块，B为子模块，C为子孙模块
+   * 1. 若B模块命名空间为second,C模块未设定命名空间时; C模块继承了B模块的命名空间，为 second/
+   * 2. 若B模块未设定命名空间, B模块命名空间为third; 则此时B模块继承的是A模块的命名空间，而C模块的命名空间路径为 third/
+   */
   getNamespace (path) {
     let module = this.root
     return path.reduce((namespace, key) => {
