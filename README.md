@@ -9,14 +9,14 @@
 
 `Vuex`也是我第一次阅读源码的库，本仓库会记录下我阅读源码的全过程以及经验分享，希望可以帮助到大家～
 
-# 进度（2/15）
+# 进度（3/15）
 **【2021年】** 每天阅读2小时（时间线中若未出现的日期，可能是因为其它事情耽搁了）
 
 > **Start**   1月15日 ：熟悉了 `Modules` 的注册流程
 
 >1月16日：了解了一下每个 `module` 注册 `state` 、`mutations` 、`actions`、`getters` 的大体流程
 
->1月17日：
+>1月17日：详细了解了 `vm` 对 `state` 、`getters` 的处理方式
 # 源码解析
 
 ## 一、源码目录结构分析
@@ -26,19 +26,19 @@
 ├── src
     ├── module    // 与模块相关的操作
     │   ├── module-collection.js   // 用于收集并注册根模块以及嵌套模块
-    │   └── module.js   // 定义Module类，存储模块内的一些信息，例如: state……
+    │   └── module.js   // 定义Module类，存储模块内的一些信息，例如: state...
     │
     ├── plugins   //
     │   ├── devtool.js   //
     │   └── logger.js    //
     │
-    ├── helpers.js       //
+    ├── helpers.js       // 辅助函数，例如：mapState、mapGetters、mapMutations...
     ├── index.cjs.js     //
     ├── index.js         // 入口文件
     ├── index.mjs        //
     ├── mixin.js         //
     ├── store.js         // 核心文件，定义了Store类
-    └── util.js          // 提供一些工具函数，例如: deepCopy、isPromise、isObject……
+    └── util.js          // 提供一些工具函数，例如: deepCopy、isPromise、isObject...
 ```
 
 ## 二、开始阅读

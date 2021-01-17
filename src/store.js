@@ -27,7 +27,7 @@ export class Store {
     this._committing = false        // 表示提交的状态，即在执行mutations方法时，该状态为true
 
     /**
-     * 用于记录所有存在的actions方法名称（包括全局的和命名空间内的）
+     * 用于记录所有存在的actions方法名称（包括全局的和命名空间内的，且允许重复定义）
      * 
      * 具体格式入下：
      * this._actions = {
@@ -39,7 +39,7 @@ export class Store {
     this._actionSubscribers = []       // 存放actions方法订阅的回调函数
 
     /**
-     * 用于记录所有存在的的mutations方法名称（包括全局的和命名空间内的）
+     * 用于记录所有存在的的mutations方法名称（包括全局的和命名空间内的，且允许重复定义）
      * 
      * 具体格式如下：
      * this._mutations = {
@@ -47,8 +47,18 @@ export class Store {
      *    second/mutations2: [function handler() {...}],  // 注册在命名空间 second/ 上的mutations2
      * }
      */
-    this._mutations = Object.create(null)     
-    this._wrappedGetters = Object.create(null)  // 收集所有模块的getters
+    this._mutations = Object.create(null)    
+    
+    /**
+     * 收集所有模块包装后的的getters（包括全局的和命名空间内的，但不允许重复定义）
+     * 
+     * 具体格式如下：
+     * this.wrappedGetters = {
+     *    getters1: function handler() {...},   // 注册在全局的getters1
+     *    second/getters2: function handler() {...},  // 注册在命名空间 second/ 上的getters2
+     * }
+     */
+    this._wrappedGetters = Object.create(null)  
     this._modules = new ModuleCollection(options)  // 根据传入的options配置，注册各个模块，此时只是注册、建立好了各个模块的关系，已经定义了各个模块的state状态，但getters、mutations等方法暂未注册
     
     /**
@@ -65,7 +75,7 @@ export class Store {
     this._watcherVM = new Vue()
     this._makeLocalGettersCache = Object.create(null)
 
-    // 将 dispatch 和 commit 方法绑定到 Store 的实例上
+    // 将 dispatch 和 commit 方法绑定到 Store 的实例上，避免后续使用dispatch或commit时改变了this指向
     const store = this
     const { dispatch, commit } = this
     this.dispatch = function boundDispatch (type, payload) {
@@ -84,8 +94,7 @@ export class Store {
     // 从根模块开始，递归完善各个模块的信息
     installModule(this, state, [], this._modules.root)
 
-    // initialize the store vm, which is responsible for the reactivity
-    // (also registers _wrappedGetters as computed properties)
+    // 生成一个Vue实例去管理state状态，同时将getters交给computed处理
     resetStoreVM(this, state)
 
     // apply plugins
@@ -124,7 +133,7 @@ export class Store {
       }
       return
     }
-    // 若有相应的方法，则执行该方法
+    // 若有相应的方法，则执行
     this._withCommit(() => {
       entry.forEach(function commitIterator (handler) {
         handler(payload)
@@ -309,19 +318,18 @@ function resetStore (store, hot) {
   resetStoreVM(store, state, hot)
 }
 
+// 初始化vm，将getters
 function resetStoreVM (store, state, hot) {
   const oldVm = store._vm
 
-  // bind store public getters
-  store.getters = {}
+  store.getters = {}    // 在实例store上设置getters对象
   // reset local getters cache
   store._makeLocalGettersCache = Object.create(null)
   const wrappedGetters = store._wrappedGetters
   const computed = {}
+  // 遍历getters，将每一个getter注册到store.getters，访问对应getter时会去vm上访问对应的computed
   forEachValue(wrappedGetters, (fn, key) => {
-    // use computed to leverage its lazy-caching mechanism
-    // direct inline function use will lead to closure preserving oldVm.
-    // using partial to return function with only arguments preserved in closure environment.
+  
     computed[key] = partial(fn, store)
     Object.defineProperty(store.getters, key, {
       get: () => store._vm[key],
@@ -329,11 +337,9 @@ function resetStoreVM (store, state, hot) {
     })
   })
 
-  // use a Vue instance to store the state tree
-  // suppress warnings just in case the user has added
-  // some funky global mixins
   const silent = Vue.config.silent
   Vue.config.silent = true
+  // 使用Vue实例来存储Vuex的state状态树，并利用computed去缓存getters返回的值
   store._vm = new Vue({
     data: {
       $$state: state
@@ -342,15 +348,15 @@ function resetStoreVM (store, state, hot) {
   })
   Vue.config.silent = silent
 
-  // enable strict mode for new vm
+  // 启用严格模式的监听警告
   if (store.strict) {
     enableStrictMode(store)
   }
 
+  // 若存在旧的vm, 销毁旧的vm
   if (oldVm) {
     if (hot) {
-      // dispatch changes in all subscribed watchers
-      // to force getter re-evaluation for hot reloading.
+      // 解除对旧的vm对state的引用
       store._withCommit(() => {
         oldVm._data.$$state = null
       })
@@ -561,6 +567,7 @@ function registerGetter (store, type, rawGetter, local) {
   }
 }
 
+// 在开发环境下，对严格模式下的vuex做一个警告打印
 function enableStrictMode (store) {
   store._vm.$watch(function () { return this._data.$$state }, () => {
     if (__DEV__) {

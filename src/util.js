@@ -66,7 +66,7 @@ export function assert (condition, msg) {
   if (!condition) throw new Error(`[vuex] ${msg}`)
 }
 
-// 
+// 保留原始参数的闭包函数
 export function partial (fn, arg) {
   return function () {
     return fn(arg)
