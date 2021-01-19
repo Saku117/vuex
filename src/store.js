@@ -7,7 +7,7 @@ let Vue // bind on install
 
 export class Store {
   constructor (options = {}) {
-    // 如果window上有Vue，则自动安装。注：这是用于在html文件中直接以script标签引入的情况
+    // 如果Vue不为undefined，且window上有Vue这个变量，则自动安装。注：这是用于在html文件中直接以script标签引入的情况
     if (!Vue && typeof window !== 'undefined' && window.Vue) {
       install(window.Vue)
     }
@@ -23,7 +23,6 @@ export class Store {
       strict = false
     } = options
 
-    // 存储一些store内部的状态
     this._committing = false        // 表示提交的状态，即在执行mutations方法时，该状态为true
 
     /**
@@ -59,6 +58,7 @@ export class Store {
      * }
      */
     this._wrappedGetters = Object.create(null)  
+
     this._modules = new ModuleCollection(options)  // 根据传入的options配置，注册各个模块，此时只是注册、建立好了各个模块的关系，已经定义了各个模块的state状态，但getters、mutations等方法暂未注册
     
     /**
@@ -71,9 +71,10 @@ export class Store {
      * }
      */
     this._modulesNamespaceMap = Object.create(null)   
-    this._subscribers = []
+
+    this._subscribers = []    // 存放mutations方法订阅的回调
     this._watcherVM = new Vue()
-    this._makeLocalGettersCache = Object.create(null)
+    this._makeLocalGettersCache = Object.create(null)     // 本地的getters缓存
 
     // 将 dispatch 和 commit 方法绑定到 Store 的实例上，避免后续使用dispatch或commit时改变了this指向
     const store = this
@@ -97,10 +98,11 @@ export class Store {
     // 生成一个Vue实例去管理state状态，同时将getters交给computed处理
     resetStoreVM(this, state)
 
-    // apply plugins
+    // 依次调用传入的插件
     plugins.forEach(plugin => plugin(this))
 
     const useDevtools = options.devtools !== undefined ? options.devtools : Vue.config.devtools
+    // 使用vue的开发插件
     if (useDevtools) {
       devtoolPlugin(this)
     }
@@ -133,6 +135,7 @@ export class Store {
       }
       return
     }
+    
     // 若有相应的方法，则执行
     this._withCommit(() => {
       entry.forEach(function commitIterator (handler) {
@@ -217,10 +220,12 @@ export class Store {
     })
   }
 
+  // 新增mutations监听函数
   subscribe (fn, options) {
     return genericSubscribe(fn, this._subscribers, options)
   }
 
+  // 新增actions监听函数
   subscribeAction (fn, options) {
     const subs = typeof fn === 'function' ? { before: fn } : fn
     return genericSubscribe(subs, this._actionSubscribers, options)
@@ -233,12 +238,14 @@ export class Store {
     return this._watcherVM.$watch(() => getter(this.state, this.getters), cb, options)
   }
 
+  // 更新一下state
   replaceState (state) {
     this._withCommit(() => {
       this._vm._data.$$state = state
     })
   }
 
+  // 注册模块
   registerModule (path, rawModule, options = {}) {
     if (typeof path === 'string') path = [path]
 
@@ -253,6 +260,7 @@ export class Store {
     resetStoreVM(this, this.state)
   }
 
+  // 卸载模块
   unregisterModule (path) {
     if (typeof path === 'string') path = [path]
 
@@ -268,6 +276,7 @@ export class Store {
     resetStore(this)
   }
 
+  // 是否存在指定模块
   hasModule (path) {
     if (typeof path === 'string') path = [path]
 
@@ -278,6 +287,7 @@ export class Store {
     return this._modules.isRegistered(path)
   }
 
+  // 热更新
   hotUpdate (newOptions) {
     this._modules.update(newOptions)
     resetStore(this, true)
@@ -292,6 +302,7 @@ export class Store {
   }
 }
 
+// 统一封装mutations、actions的监听观察者函数
 function genericSubscribe (fn, subs, options) {
   if (subs.indexOf(fn) < 0) {
     options && options.prepend
@@ -306,6 +317,7 @@ function genericSubscribe (fn, subs, options) {
   }
 }
 
+// 重置store，即注册模块、挂载state等操作
 function resetStore (store, hot) {
   store._actions = Object.create(null)
   store._mutations = Object.create(null)
@@ -329,7 +341,6 @@ function resetStoreVM (store, state, hot) {
   const computed = {}
   // 遍历getters，将每一个getter注册到store.getters，访问对应getter时会去vm上访问对应的computed
   forEachValue(wrappedGetters, (fn, key) => {
-  
     computed[key] = partial(fn, store)
     Object.defineProperty(store.getters, key, {
       get: () => store._vm[key],
@@ -472,12 +483,14 @@ function makeLocalContext (store, namespace, path) {
     }
   }
 
-  // getters and state object must be gotten lazily
-  // because they will be changed by vm update
+  /**
+   * 若没有设定命名空间，则直接读取store.getters（store.getters已经挂载到vue实例的computed上了）;
+   * 若设定了命名空间，则从本地缓存_makeLocalGettersCache中读取getters
+   */
   Object.defineProperties(local, {
     getters: {
       get: noNamespace
-        ? () => store.getters
+        ? () => store.getters    
         : () => makeLocalGetters(store, namespace)
     },
     state: {
@@ -488,25 +501,26 @@ function makeLocalContext (store, namespace, path) {
   return local
 }
 
+// 创建本地的getters缓存
 function makeLocalGetters (store, namespace) {
+  // 若缓存中没有指定的getters，则创建一个新的getters缓存到__makeLocalGettersCache中
   if (!store._makeLocalGettersCache[namespace]) {
     const gettersProxy = {}
     const splitPos = namespace.length
     Object.keys(store.getters).forEach(type => {
-      // skip if the target getter is not match this namespace
+      // 如果store.getters中没有与namespace匹配的getters，则不进行任何操作
       if (type.slice(0, splitPos) !== namespace) return
 
-      // extract local getter type
+      // 获取本地getters名称
       const localType = type.slice(splitPos)
 
-      // Add a port to the getters proxy.
-      // Define as getter property because
-      // we do not want to evaluate the getters in this time.
+      // 对getters添加一层代理
       Object.defineProperty(gettersProxy, localType, {
         get: () => store.getters[type],
         enumerable: true
       })
     })
+    // 把代理过的getters缓存到本地
     store._makeLocalGettersCache[namespace] = gettersProxy
   }
 
@@ -581,7 +595,7 @@ function getNestedState (state, path) {
   return path.reduce((state, key) => state[key], state)
 }
 
-// 处理另一种代码提交风格的情况，例如：this.$store.dispatch({type: 'add', count: 1})
+// 处理两种代码提交风格的情况，例如：1、this.$store.dispatch({type: 'add', count: 1}); 2、this.$store.dispatch('add', {count: 1})
 function unifyObjectStyle (type, payload, options) {
   if (isObject(type) && type.type) {
     options = payload
