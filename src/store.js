@@ -7,7 +7,7 @@ let Vue // bind on install
 
 export class Store {
   constructor (options = {}) {
-    // 如果Vue不为undefined，且window上有Vue这个变量，则自动安装。注：这是用于在html文件中直接以script标签引入的情况
+    // 避免二次安装，并且如果window上有Vue这个变量，则自动安装。注：这是用于在html文件中直接以script标签引入的情况
     if (!Vue && typeof window !== 'undefined' && window.Vue) {
       install(window.Vue)
     }
@@ -23,7 +23,10 @@ export class Store {
       strict = false
     } = options
 
-    this._committing = false        // 表示提交的状态，即在执行mutations方法时，该状态为true
+    /** 表示提交的状态，当通过mutations方法改变state时，该状态为true，state值改变完后，该状态变为false
+    *   在严格模式下会监听state值的改变，当改变时，_committing为false时，会发出警告，即表明state值的改变不是经过mutations的
+    */
+    this._committing = false
 
     /**
      * 用于记录所有存在的actions方法名称（包括全局的和命名空间内的，且允许重复定义）
