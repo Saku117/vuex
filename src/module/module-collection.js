@@ -7,7 +7,10 @@ export default class ModuleCollection {
     this.register([], rawRootModule, false)
   }
 
-  // 根据路径顺序，从根模块开始递归获取到我们准备添加新的模块的父模块
+  /**
+   * 根据路径顺序，从根模块开始递归获取到我们准备添加新的模块的父模块
+   * @param {*} path 
+   */
   get (path) {
     return path.reduce((module, key) => {
       return module.getChild(key)
@@ -27,12 +30,20 @@ export default class ModuleCollection {
       return namespace + (module.namespaced ? key + '/' : '')
     }, '')
   }
-
+  /**
+   * 更新模块
+   * @param {*} rawRootModule 
+   */
   update (rawRootModule) {
     update([], this.root, rawRootModule)
   }
 
-  // 递归注册模块
+  /**
+   * 递归注册模块
+   * @param {*} path 
+   * @param {*} rawModule 
+   * @param {*} runtime 
+   */
   register (path, rawModule, runtime = true) {
     if (__DEV__) {
       assertRawModule(path, rawModule)
@@ -57,7 +68,10 @@ export default class ModuleCollection {
     }
   }
 
-  // 根据模块路径，注销对应的模块
+  /**
+   * 根据模块路径，注销对应的模块
+   * @param {*} path 
+   */
   unregister (path) {
     const parent = this.get(path.slice(0, -1))
     const key = path[path.length - 1]
@@ -80,7 +94,10 @@ export default class ModuleCollection {
     parent.removeChild(key)
   }
 
-  // 判断模块是否已被注册
+  /**
+   * 判断模块是否已被注册
+   * @param {*} path 
+   */
   isRegistered (path) {
     const parent = this.get(path.slice(0, -1))
     const key = path[path.length - 1]
@@ -92,7 +109,12 @@ export default class ModuleCollection {
     return false
   }
 }
-
+/**
+ * 用新模块对旧模块进行定义
+ * @param {*} path 
+ * @param {*} targetModule 
+ * @param {*} newModule 
+ */
 function update (path, targetModule, newModule) {
   if (__DEV__) {
     assertRawModule(path, newModule)

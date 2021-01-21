@@ -1,13 +1,9 @@
 /**
- * Get the first item that pass the test
- * by second argument function
- *
+ * 找到数组list中第一个符合要求的元素
  * @param {Array} list
  * @param {Function} f
  * @return {*}
  */
-
- // 找到数组list中第一个符合要求的元素
 export function find (list, f) {
   return list.filter(f)[0]
 }
@@ -46,27 +42,45 @@ export function deepCopy (obj, cache = []) {
   return copy
 }
 
-// 遍历obj对象的每个属性的值
+/**
+ * 遍历obj对象的每个属性的键和值,用fn对其进行操作
+ * @param {*} obj 
+ * @param {*} fn 
+ */
 export function forEachValue (obj, fn) {
   Object.keys(obj).forEach(key => fn(obj[key], key))
 }
 
-// 判断是否为对象（排除null）
+/**
+ * 判断是否为对象（排除null）
+ * @param {*} obj 
+ */
 export function isObject (obj) {
   return obj !== null && typeof obj === 'object'
 }
 
-// 判断是否为Promise对象
+/**
+ * 判断是否为Promise对象
+ * @param {*} val 
+ */
 export function isPromise (val) {
   return val && typeof val.then === 'function'
 }
 
-// 断言
+/**
+ * 断言 传入的condition是否正确，如果为false 返回msg
+ * @param {*} condition 
+ * @param {*} msg 
+ */
 export function assert (condition, msg) {
   if (!condition) throw new Error(`[vuex] ${msg}`)
 }
 
-// 保留原始参数的闭包函数
+/**
+ * 保留原始参数的闭包函数
+ * @param {*} fn 
+ * @param {*} arg 
+ */
 export function partial (fn, arg) {
   return function () {
     return fn(arg)

@@ -14,7 +14,9 @@ export default function (Vue) {
     }
   }
 
-  // 将vuex混入到options中
+  /**
+   * 将vuex混入到options中,在vue中的子组件也可以使用this.$store取到store
+   */
   function vuexInit () {
     const options = this.$options
     // store injection
